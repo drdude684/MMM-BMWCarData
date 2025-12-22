@@ -63,7 +63,7 @@ Module.register("MMM-BMWCarData", {
     var wrapper = document.createElement("div");
 	  wrapper.classList.add("bmw-wrapper");
 
-    if (this.config.email === "" || this.config.password === "" || this.config.vin === "") {
+    if (this.config.vin === "") {
       wrapper.innerHTML = "Missing configuration.";
       return wrapper;
     }
