@@ -8,8 +8,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "preinstall": "echo 'Installing Python Dependencies...' && pip install -r requirements.txt --no-warn-script-location"
+    "start": "node index.js"
   },
   "author": "Jonathan Andree",
   "license": "MIT",

@@ -1,10 +1,7 @@
 
-Module.register("MMM-MyBMW", {
+Module.register("MMM-BMWCarData", {
   defaults: {
-    hCaptchaToken: '',
-    authStorePath: 'modules/MMM-MyBMW/mybmw_auth.json',
-    region: 'rest',
-    refresh: 15,
+    refresh: 60,
     vehicleOpacity: 0.75,
     useUSUnits: false,
     showMileage: true,
@@ -16,7 +13,7 @@ Module.register("MMM-MyBMW", {
   },
 
   getStyles: function () {
-    return ["MMM-MyBMW.css"];
+    return ["MMM-BMWCarData.css"];
   },
 
   getScripts: function () {
@@ -25,7 +22,7 @@ Module.register("MMM-MyBMW", {
 
   start: function () {
     Log.info("Starting module: " + this.name);
-    this.sendSocketNotification("MMM-MYBMW-CONFIG", this.config);
+    this.sendSocketNotification("MMM-BMWCARDATA-CONFIG", this.config);
     this.bmwInfo = {};
     this.getInfo();
     self = this;
@@ -34,7 +31,7 @@ Module.register("MMM-MyBMW", {
   },
 
   getInfo: function () {
-    this.sendSocketNotification("MMM-MYBMW-GET", {
+    this.sendSocketNotification("MMM-BMWCARDATA-GET", {
 	    instanceId: this.identifier,
 	    vin: this.config.vin
     });
@@ -42,7 +39,7 @@ Module.register("MMM-MyBMW", {
 
   socketNotificationReceived: function (notification, payload) {
     if (
-      notification === "MMM-MYBMW-RESPONSE" + this.identifier &&
+      notification === "MMM-BMWCARDATA-RESPONSE" + this.identifier &&
       Object.keys(payload).length > 0
     ) {
       this.bmwInfo = payload;

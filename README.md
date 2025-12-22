@@ -1,51 +1,51 @@
-# MMM-MyBMW
-Magic Mirror Module to display data from MyBMW for your car(s).
 
-![Screenshot](screenshot.png "Screenshot")
+# MMM-BMWCarData
+Magic Mirror Module to display data from BMW's Car Data API for your car(s).
+
+Warning: very experimental at this moment, and primarily focused on my specific use case (single european ICE car).
+
+TBD
+
+[Screenshot](screenshot.png "Screenshot")
 
 The module displays icons to show lock, charging and battery status, electric and combined range, and total kilometers driven. It also shows the time the MyBMW API last received data from the car.
 
 If you own several BMW cars, you can configure a module for each of them. The module configuration requires the vin number of the car to separate multiple module instances.
 
-The module is heavily based on [MMM-BMWConnected](https://github.com/jannekalliola/MMM-BMWConnected) by [Howard Durdle](https://github.com/hdurdle) and [Janne Kalliola](https://github.com/jannekalliola) and uses [bimmer_connected](https://github.com/bimmerconnected/bimmer_connected) to query the MyBMW API.
+The module is heavily based on [MMM-MyBMW](https://github.com/Jargendas/MMM-MyBMW) by [Jargendas](https://github.com/Jargendas) which used the MyBMW API, which is not accessible anymore. It is mostly a re-write of the back end to support obtaining the data from BMW's CarData interface.
+
+ALL BELOW TO BE UPDATED
 
 ## Requirements
-
-**A working python 3 distribution with pip is required before the installation.**
 
 ## Installation
 
 Clone this repository in your modules folder, and install dependencies:
 
     cd ~/MagicMirror/modules
-    git clone https://github.com/Jargendas/MMM-MyBMW.git
-    cd MMM-MyBMW
+    git clone https://github.com/drdude684/MMM-BMWCarData.git
+    cd MMM-BMWCarData
     npm install 
 
 
 ## Configuration
 
 Go to the MagicMirror/config directory and edit the config.js file. Add the module to your modules array in your config.js.
-
-You'll need your MyBMW email and password, and your car's VIN number.
-
-Additionally, an hCaptcha token is required on first startup. The session data will be saved afterwards, so it should only be required once. You can generate this token [here](https://bimmer-connected.readthedocs.io/en/stable/captcha/north_america.html) for North America or [here](https://bimmer-connected.readthedocs.io/en/stable/captcha/rest_of_world.html) for the rest of the world.
+TBD
 
 Enter these details in the config.js for your MagicMirror installation:
 
         {
-            module: "MMM-MyBMW",
+            module: "MMM-BMWCarData",
             position: "top_right",
             config: {
-                email: "email@example.com",
-                password: "myComplexPassword",
                 vin: "XXXXXXXXXXXXXXXXX",
-                hCaptchaToken: "<token>",
             }
         },
 
 ## Module configuration
 The module has a few configuration options:
+TBD
 
 <table>
   <thead>
@@ -120,6 +120,4 @@ The module has a few configuration options:
 
 ## Changelog
 
-**2024-03-12** Forked from MMM-BMWConnected and migrated to MyBMW via bimmer_connected.<br />
-**2024-12-30** Implemented hCaptcha handling which is now required for bimmer_connected operation.<br />
-**2024-12-31** Added US unit mode, which is not handled by bimmer connected anymore
+**2024-12-22** Forked from MMM-MyBMW and migrated to BMW CarData API.<br />
