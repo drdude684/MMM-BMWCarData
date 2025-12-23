@@ -10,7 +10,7 @@ const bmwApiRoutes = {
   readTelematicData: {type: 'GET', url: 'https://api-cardata.bmwgroup.com/customers/vehicles',headers: {Accept: 'application/json', 'x-version':'v1'}, addToken:true},
 }
 
-var sessionInfoFile='./bmw_session_info.json';
+var sessionInfoFile=null;
 
 module.exports = NodeHelper.create({
   start: async function () {
@@ -18,6 +18,8 @@ module.exports = NodeHelper.create({
     this.sessionInfo = {};
     this.config = {};
     this.bmwInfo = {};
+    
+    sessionInfoFile=this.path+'/bmw_session_info.json';
 
     log(`attempting to load session info from file ${sessionInfoFile}`);
     if (fs.existsSync(sessionInfoFile))
@@ -45,18 +47,22 @@ module.exports = NodeHelper.create({
       res=await getTelematicData(this,vin);
       log('requested telematic data, result:')
 
-      log(JSON.stringify(res.data));
-      
-      this.bmwInfo[vin]={
-        mileage:res.data.telematicData["vehicle.vehicle.travelledDistance"].value,
-        fuel:res.data.telematicData["vehicle.drivetrain.fuelSystem.level"].value,
-      };
-      
-      log('retrieved vehicle data, now sending it on');
-      log(JSON.stringify(this.bmwInfo));
-      
-      self.sendResponse(payload);
-      
+      if(res.data) {
+        log(JSON.stringify(res.data));
+        locked=((res.data.telematicData["vehicle.cabin.door.lock.status"].value==='SECURED')||(res.data.telematicData["vehicle.cabin.door.lock.status"].value==='LOCKED'));
+        this.bmwInfo[vin]={
+          mileage:res.data.telematicData["vehicle.vehicle.travelledDistance"].value,
+          fuelRange:res.data.telematicData["vehicle.drivetrain.lastRemainingRange"].value,
+          doorLock:locked,
+        };
+        
+        log('retrieved vehicle data, now sending it on');
+        log(JSON.stringify(this.bmwInfo));
+        
+        self.sendResponse(payload);
+      }
+      else
+        log('<none>, did not send it to module');
     }
   },
   sendResponse: function (payload) {
@@ -68,6 +74,10 @@ module.exports = NodeHelper.create({
 
 function log(message) {
   Log.log('MMM-BMWCarData helper: '+message);
+}
+
+function sendError(self,error) {
+  self.sendSocketNotification("MMM-BMWCARDATA-ERROR",error);
 }
 
 async function getAccessToken(self,vin){
@@ -85,12 +95,21 @@ async function getAccessToken(self,vin){
       
     fs.writeFile(sessionInfoFile,JSON.stringify(self.sessionInfo),err=>{if(err){log(err)}});
     log(`Please visit ${res.data.verification_uri} within the next ${res.data.expires_in} seconds, log in (if required), and enter the following code:\n${res.data.user_code}`)
-    self.bmwInfo[vin].error='initial authorization required';
-
+    sendError(self,`Authorization required. Visit <br>${res.data.verification_uri}<br> within ${res.data.expires_in} seconds<br>Code: ${res.data.user_code}`)
+    
+    log('start polling for user to provide authorization');
     res=await getFirstToken(self,vin,0);
     if(!res.data)
       return {error: 'could not obtain first token'};
       
+    log('start polling for user to provide authorization');
+    res=await createContainer(self,vin);
+    if(!res.data)
+      return {error: 'could not create Container'};
+     
+    sendError(self,'');//all is well, time to clear the instruction to provide authorization
+      
+    log('initial token flow successful, providing token');
     return {data:self.sessionInfo[vin].access_token};
   }
   if(!self.sessionInfo[vin].token_expiry||(self.sessionInfo[vin].token_expiry<currentTime)) {
@@ -99,6 +118,7 @@ async function getAccessToken(self,vin){
     if(!res.data)
       return {error: 'could not refresh token'};
       
+    log('refresh token flow successful, providing token');
     return {data:self.sessionInfo[vin].access_token};
   }
   
@@ -126,6 +146,7 @@ async function getDeviceCode(self,vin){
     if(!self.sessionInfo[vin])
       self.sessionInfo[vin]={};
     self.sessionInfo[vin].device_code=res.data.device_code;
+    self.sessionInfo[vin].c=res.data.device_code;
     return {data: res.data}
   }
   catch(e) {
@@ -144,7 +165,7 @@ async function getFirstToken(self,vin,iteration){
   const pollingInterval = 30;
   
   bodydata={  
-    client_id: self.bmwInfo[vin].clientId,
+    client_id: self.bmwInfo[vin].client_id,
     device_code: self.sessionInfo[vin].device_code,
     grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
     code_verifier: 'Lc-kVofs3uj2Aj5Yrpd8X8Sa0N6tGmp4VIjflKSbFSQ'
@@ -179,7 +200,8 @@ async function getFirstToken(self,vin,iteration){
     }
     log(`Will retry in ${pollingInterval} seconds`);
     await new Promise((resolve) => {setTimeout(resolve, 30*1000)});
-    return await getFirstToken(self,iteration+1);
+    res= await getFirstToken(self,vin,iteration+1);
+    return res;
   }
 }
 
@@ -187,7 +209,7 @@ async function refreshToken(self,vin,iteration){
   log('refreshToken() called');  
   
   bodydata={  
-    client_id: self.bmwInfo[vin].clientId,
+    client_id: self.bmwInfo[vin].client_id,
     refresh_token: self.sessionInfo[vin].refresh_token,
     grant_type: 'refresh_token',
   }
@@ -236,8 +258,6 @@ async function createContainer(self,vin){
       "vehicle.vehicle.travelledDistance",
       "vehicle.cabin.door.lock.status",
       "vehicle.body.lights.isRunningOn", // may not work, to be investigated
-      //"vehicle.cabin.infotainment.navigation.currentLocation.latitude",
-      //"vehicle.cabin.infotainment.navigation.currentLocation.longitude",
       "vehicle.drivetrain.lastRemainingRange"
       ]
   }
@@ -263,10 +283,10 @@ async function createContainer(self,vin){
 async function getTelematicData(self,vin){
   log('getTelematicData() called');  
   
-  if(false) {  // dummy response so as not to overload BMW API server while debugging
-    res=JSON.parse('{"telematicData":{"vehicle.drivetrain.fuelSystem.remainingFuel":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"l","value":"21"},"vehicle.cabin.infotainment.navigation.currentLocation.latitude":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"degrees","value":"52.00462527777778"},"vehicle.vehicle.travelledDistance":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"km","value":"38402"},"vehicle.drivetrain.fuelSystem.level":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"%","value":"48"},"vehicle.body.lights.isRunningOn":{"timestamp":null,"unit":null,"value":null},"vehicle.cabin.infotainment.navigation.currentLocation.longitude":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"degrees","value":"4.35681"},"vehicle.status.serviceDistance.next":{"timestamp":null,"unit":null,"value":null},"vehicle.cabin.door.lock.status":{"timestamp":"2025-12-20T16:54:10.000Z","unit":null,"value":"SECURED"},"vehicle.cabin.infotainment.navigation.remainingRange":{"timestamp":null,"unit":null,"value":null}}}');
-    return {data:res};
-  }
+  //if(true) {  // dummy response so as not to overload BMW API server while debugging
+    //res=JSON.parse('{"telematicData":{"vehicle.drivetrain.fuelSystem.remainingFuel":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"l","value":"21"},"vehicle.vehicle.travelledDistance":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"km","value":"38402"},"vehicle.drivetrain.fuelSystem.level":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"%","value":"48"},"vehicle.body.lights.isRunningOn":{"timestamp":null,"unit":null,"value":null},"vehicle.drivetrain.lastRemainingRange":{"timestamp":"2025-12-20T16:54:10.000Z","unit":"km","value":"279"},"vehicle.cabin.door.lock.status":{"timestamp":"2025-12-20T16:54:10.000Z","unit":null,"value":"SECURED"},"vehicle.cabin.infotainment.navigation.remainingRange":{"timestamp":null,"unit":null,"value":null}}}');
+    //return {data:res};
+  //}
   
   res=await getAccessToken(self,vin); // to ensure all has been properly initiated and self.bmwInfo[vin] etc. will exist in the next call
   
@@ -274,11 +294,10 @@ async function getTelematicData(self,vin){
   log(`Status ${res.status} on BMW API call to retrieve Telematic data`);
   if(res.status==200){
     try{      
-      log('response: '+JSON.stringify(res.data));
       return {data: res.data};
     }    
     catch(e) {
-      log(`Exception while creating Container: ${e.message}`)
+      log(`Exception while processing telematic data: ${e.message}`)
       return {error: `${e.message}`};
     }
   }  
@@ -292,10 +311,10 @@ async function bmwApiCall(self,vin,route,endpoint,body){
       log('body: '+body);
     fullHeaders=route.headers;
     if(route.addToken) {
-      token=getAccessToken(self,vin);
-      fullHeaders.Authorization='Bearer '+access_token;
+      token=await getAccessToken(self,vin);
+      fullHeaders.Authorization='Bearer '+token.data;
     }
-    
+    log('headers: '+await JSON.stringify(fullHeaders));    
     var res = await fetch(fullroute, {
       method: route.type, 
       headers: fullHeaders,      

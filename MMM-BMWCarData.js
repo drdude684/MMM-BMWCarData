@@ -48,7 +48,19 @@ Module.register("MMM-BMWCarData", {
           this.bmwInfo.electricRange = Math.round(this.bmwInfo.electricRange/1.60934);
           this.bmwInfo.fuelRange = Math.round(this.bmwInfo.fuelRange/1.60934);
       }
+      this.error=null;
       this.updateDom(1000);
+    }
+    if (notification === "MMM-BMWCARDATA-ERROR") {
+      if (Object.keys(payload).length > 0) {        
+        this.error = payload;
+        this.updateDom(1000);
+        setTimeout(() => {this.error=null;this.updateDom(1000);}, 5*60*1000) // errors get cleared automatically after 5 minutes, or when regular data is received
+      } else {
+        this.error = 'clearing error';
+        this.updateDom(1000);
+        setTimeout(() => {this.error=null;this.updateDom(1000);}, 1000) 
+      }
     }
   },
 
@@ -65,6 +77,12 @@ Module.register("MMM-BMWCarData", {
 
     if (this.config.vin === "") {
       wrapper.innerHTML = "Missing configuration.";
+      return wrapper;
+    }
+
+    if (!!this.error) {
+      wrapper.innerHTML = this.error;
+      wrapper.className = "bright light small";
       return wrapper;
     }
 
