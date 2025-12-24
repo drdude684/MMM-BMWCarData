@@ -4,7 +4,7 @@ Magic Mirror Module to display data from BMW's Car Data API for your car(s).
 
 **Warning**: very experimental at this moment, and development and testing is primarily focused on my specific use case (single european ICE car).
 
-[Screenshot](screenshot.png "Screenshot")
+![Screenshot](screenshot.png "Screenshot")
 
 The module displays icons to show lock, charging and battery status, electric and combined range, and total kilometers driven. It also shows the time the module last received data from BMW's servers.
 
