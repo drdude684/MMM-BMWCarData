@@ -88,9 +88,6 @@ The module has a few configuration options:
       <td><code>showFuelRange</code></td>
       <td>Whether to show the fuel range. Will be hidden automatically if fuel range is zero (i.e. when car is  electric). <br /><br /><strong>Default: </strong><code>true</code></td>
     </tr>
-    <tr>
-      <td><code>showLastUpdated</code></td>
-      <td>Whether to show the info when the data was last updated. <br /><br /><strong>Default: </strong><code>true</code></td>
     </tr>
     <tr>
       <td><code>fuelRangeWarning</code></td>
@@ -100,6 +97,10 @@ The module has a few configuration options:
       <td><code>fuelRangeCritical</code></td>
       <td>Fuel icon will be red if remaining range is below this value. <br /><br /><strong>Default: </strong><code>50</code></td>
     </tr>
+   <tr>
+      <td><code>showLastUpdated</code></td>
+      <td>Whether to show the info when the data was last updated. <br /><br /><strong>Default: </strong><code>true</code></td>
+        </tr>
     <tr>
       <td><code>lastUpdatedText</code></td>
       <td>The text to be shown before the last updated timestamp. <br /><br /><strong>Default: </strong><code>last updated</code></td>
