@@ -1,4 +1,4 @@
-
+ 
 Module.register("MMM-BMWCarData", {
   defaults: {
     refresh: 60,
@@ -8,6 +8,8 @@ Module.register("MMM-BMWCarData", {
     showElectricPercentage: true,
     showElectricRange: true,
     showFuelRange: true,
+    fuelRangeWarning: 100,
+    fuelRangeCritical: 50,
     showLastUpdated: true,
     lastUpdatedText: "last updated"
   },
@@ -64,10 +66,12 @@ Module.register("MMM-BMWCarData", {
     }
   },
 
-  faIconFactory: function (icon) {
+  faIconFactory: function (icon, color) {
     var faIcon = document.createElement("i");
     faIcon.classList.add("fas");
     faIcon.classList.add(icon);
+    if(color)
+      faIcon.style.color=color;
     return faIcon;
   },
 
@@ -200,7 +204,13 @@ Module.register("MMM-BMWCarData", {
     var fuelRange = document.createElement("span");
     fuelRange.classList.add("fuelRange");
     if ((this.config.showFuelRange) && (info.fuelRange != '')) {
-      fuelRange.appendChild(this.faIconFactory("fa-gas-pump"));
+      if(info.fuelRange<this.config.fuelRangeCritical)
+        fuelRange.appendChild(this.faIconFactory("fa-gas-pump","red"));
+      else
+        if(info.fuelRange<this.config.fuelRangeWarning)
+          fuelRange.appendChild(this.faIconFactory("fa-gas-pump","orange"));
+        else
+          fuelRange.appendChild(this.faIconFactory("fa-gas-pump"));
       fuelRange.appendChild(document.createTextNode(info.fuelRange + (this.config.useUSUnits ? ' mi' : ' km')));
     } else {
       fuelRange.appendChild(document.createTextNode("\u00a0"));
