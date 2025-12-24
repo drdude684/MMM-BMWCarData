@@ -93,6 +93,14 @@ The module has a few configuration options:
       <td>Whether to show the info when the data was last updated. <br /><br /><strong>Default: </strong><code>true</code></td>
     </tr>
     <tr>
+      <td><code>fuelRangeWarning</code></td>
+      <td>Fuel icon will be orange if remaining range is below this value (and above the fuelRangeCritical value). <br /><br /><strong>Default: </strong><code>100</code></td>
+    </tr>
+    <tr>
+      <td><code>fuelRangeCritical</code></td>
+      <td>Fuel icon will be red if remaining range is below this value. <br /><br /><strong>Default: </strong><code>50</code></td>
+    </tr>
+    <tr>
       <td><code>lastUpdatedText</code></td>
       <td>The text to be shown before the last updated timestamp. <br /><br /><strong>Default: </strong><code>last updated</code></td>
     </tr>
