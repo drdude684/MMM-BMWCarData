@@ -2,19 +2,16 @@
 # MMM-BMWCarData
 Magic Mirror Module to display data from BMW's Car Data API for your car(s).
 
-Warning: very experimental at this moment, and primarily focused on my specific use case (single european ICE car).
-
-TBD
+**Warning**: very experimental at this moment, and development and testing is primarily focused on my specific use case (single european ICE car).
 
 [Screenshot](screenshot.png "Screenshot")
 
-The module displays icons to show lock, charging and battery status, electric and combined range, and total kilometers driven. It also shows the time the MyBMW API last received data from the car.
+The module displays icons to show lock, charging and battery status, electric and combined range, and total kilometers driven. It also shows the time the module last received data from BMW's servers.
 
 If you own several BMW cars, you can configure a module for each of them. The module configuration requires the vin number of the car to separate multiple module instances.
 
 The module is heavily based on [MMM-MyBMW](https://github.com/Jargendas/MMM-MyBMW) by [Jargendas](https://github.com/Jargendas) which used the MyBMW API, which is not accessible anymore. It is mostly a re-write of the back end to support obtaining the data from BMW's CarData interface.
 
-ALL BELOW TO BE UPDATED
 
 ## Requirements
 
@@ -30,8 +27,8 @@ Clone this repository in your modules folder, and install dependencies:
 
 ## Configuration
 
+Obtain a BMW CardData client ID as per [BMW's instructions](https://bmw-cardata.bmwgroup.com/customer/public/api-documentation). Ensure 'request access to CarData API' is enabled for that client ID.
 Go to the MagicMirror/config directory and edit the config.js file. Add the module to your modules array in your config.js.
-TBD
 
 Enter these details in the config.js for your MagicMirror installation:
 
@@ -39,13 +36,13 @@ Enter these details in the config.js for your MagicMirror installation:
             module: "MMM-BMWCarData",
             position: "top_right",
             config: {
+                clientId: "QQQQQQQQQQQQQQQQQQQQQQQ",
                 vin: "XXXXXXXXXXXXXXXXX",
             }
         },
 
 ## Module configuration
 The module has a few configuration options:
-TBD
 
 <table>
   <thead>
@@ -56,28 +53,16 @@ TBD
   </thead>
   <tbody>
     <tr>
-      <td><code>email</code></td>
-      <td>Your email for the MyBMW platform, required.<br /><br /><strong>Default: </strong><code>undefined</code></td>
-    </tr>
-    <tr>
-      <td><code>password</code></td>
-      <td>Your password for the MyBMW platform, required.<br /><br /><strong>Default: </strong><code>undefined</code></td>
+      <td><code>clientId</code></td>
+      <td>Your Client ID for the BMW CarData API, required.<br /><br /><strong>Default: </strong><code>undefined</code></td>
     </tr>
     <tr>
       <td><code>vin</code></td>
       <td>Your car's VIN code, required.<br /><br /><strong>Default: </strong><code>undefined</code></td>
     </tr>
     <tr>
-      <td><code>hCaptchaToken</code></td>
-      <td>An hCaptcha token for authentication, required on first startup. Can be generated <a href="https://bimmer-connected.readthedocs.io/en/stable/captcha/north_america.html">here</a> for North America or <a href="https://bimmer-connected.readthedocs.io/en/stable/captcha/rest_of_world.html">here</a> for the rest of the world.<br /><br /><strong>Default: </strong><code>''</code></td>
-    </tr>
-    <tr>
-      <td><code>region</code></td>
-      <td>Must be set to the region your car is operating in, required for the MyBMW API. Can be <code>us</code>, <code>cn</code>, or <code>rest</code>.<br /><br /><strong>Default: </strong><code>rest</code></td>
-    </tr>
-    <tr>
       <td><code>refresh</code></td>
-      <td>How often to refresh the data in minutes. <br /> <br />Be careful: BMW limits the amount of calls per account per day (to ~200 ?), so don't set this value too low.<br /><br /><strong>Default: </strong><code>15</code></td>
+      <td>How often to refresh the data in minutes. <br /> <br />Be careful: BMW limits the amount of calls per account per day (to 50), so don't set this value too low.<br /><br /><strong>Default: </strong><code>60</code></td>
     </tr>
     <tr>
       <td><code>vehicleOpacity</code></td>
@@ -85,7 +70,7 @@ TBD
     </tr>
     <tr>
       <td><code>useUSUnits</code></td>
-      <td>If true, miles instead of kilometres are shown for all range values. <br /><br /><strong>Default: </strong><code>false</code></td>
+      <td>If true, miles instead of kilometres are shown for all range values. (implementation incomplete/untested/maybe not required)<br /><br /><strong>Default: </strong><code>false</code></td>
     </tr>
     <tr>
       <td><code>showMileage</code></td>
@@ -93,11 +78,11 @@ TBD
     </tr>
     <tr>
       <td><code>showElectricRange</code></td>
-      <td>Whether to show the electric range. Will be hidden automatically if electric range is zero (i.e. when car is not electric).<br /><br /><strong>Default: </strong><code>true</code></td>
+      <td>Whether to show the electric range. Will be hidden automatically if electric range is zero (i.e. when car is not electric). (implementation incomplete/untested)<br /><br /><strong>Default: </strong><code>true</code></td>
     </tr>
     <tr>
       <td><code>showElectricPercentage</code></td>
-      <td>Whether to show the battery charging also in percentages. Will be hidden automatically if electric range is zero (i.e. when car is not electric).<br /><br /><strong>Default: </strong><code>true</code></td>
+      <td>Whether to show the battery charging also in percentages. Will be hidden automatically if electric range is zero (i.e. when car is not electric). (implementation incomplete/untested)<br /><br /><strong>Default: </strong><code>true</code></td>
     </tr>
     <tr>
       <td><code>showFuelRange</code></td>
@@ -111,13 +96,10 @@ TBD
       <td><code>lastUpdatedText</code></td>
       <td>The text to be shown before the last updated timestamp. <br /><br /><strong>Default: </strong><code>last updated</code></td>
     </tr>
-    <tr>
-      <td><code>authStorePath</code></td>
-      <td>Path to store the auth data to for future access without a new hCaptcha token. <br /><br /><strong>Default: </strong><code>modules/MMM-MyBMW/mybmw_auth.json</code></td>
-    </tr>
   </tbody>
 </table>
 
 ## Changelog
 
+**2024-12-24** Pushed first version which fully works for my car.<br />
 **2024-12-22** Forked from MMM-MyBMW and migrated to BMW CarData API.<br />
