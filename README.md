@@ -41,6 +41,8 @@ Enter these details in the config.js for your MagicMirror installation:
             }
         },
 
+Now, on first start of the magic mirror you'll have to log in to a specifc bmw website using your connecteddrive credentials and provide a one time code to authorize the access. Details are provided in the module, but can also be found in the mm log. Note that you only have limited time to do this; typically, 5 minutes.
+
 ## Module configuration
 The module has a few configuration options:
 
