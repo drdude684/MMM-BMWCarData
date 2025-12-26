@@ -47,6 +47,8 @@ module.exports = NodeHelper.create({
       else
         self.sessionInfo[vin]={client_id:payload.clientId};
       self.bmwInfo[vin]={error:null};
+      if(payload.loggingLevel)
+        loggingLevel=payload.loggingLevel;
       log(2,'loaded config values:');
       log(2,JSON.stringify(self.config));
       log(2,'current sessionInfo structure:');
