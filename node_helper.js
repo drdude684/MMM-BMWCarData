@@ -4,7 +4,7 @@ const Log = require("logger");
 const imagedownload = require('image-downloader');
 const fs = require('fs');
 
-const loggingLevel=0; // 0: critical, 1: normal, 2: detailed
+var loggingLevel=0; // 0: critical, 1: normal, 2: detailed
 
 const bmwApiRoutes = {
   getDeviceCode: {type: 'POST', url: 'https://customer.bmwgroup.com/gcdm/oauth/device/code', headers: {Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded'}, addToken:false},
