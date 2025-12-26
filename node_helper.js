@@ -401,12 +401,14 @@ async function getVehicleImage(self,vin){
 }
 
 async function bmwApiCall(self,vin,route,endpoint,body){
+  
+  var fullRoute,fullHeaders;
   if(endpoint)
-    fullroute=route.url+endpoint;
+    fullRoute=route.url+endpoint;
   else
-    fullroute=route.url;
+    fullRoute=route.url;
   try {
-    log(1,'calling BMW API at '+fullroute);
+    log(1,'calling BMW API at '+fullRoute);
     if(body)
       log(2,'body: '+body);
     fullHeaders=route.headers;
@@ -415,7 +417,7 @@ async function bmwApiCall(self,vin,route,endpoint,body){
       fullHeaders.Authorization='Bearer '+token.data;
     }
     log(2,'headers: '+await JSON.stringify(fullHeaders));   
-    var res = await fetch(fullroute, {
+    var res = await fetch(fullRoute, {
       method: route.type,
       headers: fullHeaders,     
       body: body
