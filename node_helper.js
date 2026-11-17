@@ -32,7 +32,10 @@ const bmwApiRoutes = {
   readVehicleData: {type: 'GET', url: 'https://api-cardata.bmwgroup.com/customers/vehicles', headers: {Accept: 'application/json', 'x-version': 'v1'}, addToken: true},
 };
 
-const containerName = 'MM_data'; // name for our container in BMW's CarData API
+const containerName = 'MM_data';
+// Scopes requested at login. The module only uses the REST API; the streaming scope is optional and
+// makes BMW reject the login (400 invalid_request) if "CarData Stream" is not enabled for the client ID.
+const defaultScope = 'authenticate_user openid cardata:api:read'; // name for our container in BMW's CarData API
 
 // Descriptors requested in the container. Availability varies per model; missing ones come back as null.
 const technicalDescriptors = [
@@ -121,6 +124,8 @@ module.exports = NodeHelper.create({
     const res = await getTelematicData(this, vin);
     if (!res || !res.data || !res.data.telematicData) {
       log(0, 'no telematic data received, nothing sent to module');
+      if (!this.bmwInfo[vin] || !this.bmwInfo[vin].updateTime)
+        this.sendSocketNotification("MMM-BMWCARDATA-RESPONSE" + payload.instanceId, {error: 'No data from BMW yet, see MagicMirror log.'});
       return;
     }
     log(1, 'telematic data: ' + JSON.stringify(res.data));
@@ -251,14 +256,15 @@ async function getDeviceCode(self, vin) {
   const body = new URLSearchParams({
     client_id: self.sessionInfo[vin].client_id,
     response_type: 'device_code',
-    scope: 'authenticate_user openid cardata:api:read cardata:streaming:read',
+    scope: (self.config[vin] && self.config[vin].scope) || defaultScope,
     code_challenge: challenge,
     code_challenge_method: 'S256'
   }).toString();
   const res = await bmwApiCall(self, vin, bmwApiRoutes.getDeviceCode, '', body);
   if (res.status != 200 || !res.data) {
     log(0, `Error status ${res.status} on BMW API call to obtain device code: ${JSON.stringify(res.body || res.error || '')}`);
-    log(0, 'Check that the client ID is correct and that both "CarData API" and "CarData Stream" are enabled for it in the BMW CarData portal.');
+    log(0, 'Check that the client ID is correct and that "Request access to CarData API" is enabled for it in the BMW CarData portal.');
+    sendError(self, 'BMW login could not be started (' + res.status + ' ' + ((res.body && res.body.error) || res.error || '') + ').<br>Check client ID and CarData API access in the BMW portal.');
     return;
   }
   self.sessionInfo[vin].device_code = res.data.device_code;
