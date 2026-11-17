@@ -46,9 +46,10 @@ Module.register("MMM-BMWCarData", {
     ) {
       this.bmwInfo = payload;
       if (this.config.useUSUnits) {
-          this.bmwInfo.mileage = Math.round(this.bmwInfo.mileage/1.60934);
-          this.bmwInfo.electricRange = Math.round(this.bmwInfo.electricRange/1.60934);
-          this.bmwInfo.fuelRange = Math.round(this.bmwInfo.fuelRange/1.60934);
+          var toMi = function (v) { return (v === null || v === undefined) ? v : Math.round(v / 1.60934); };
+          this.bmwInfo.mileage = toMi(this.bmwInfo.mileage);
+          this.bmwInfo.electricRange = toMi(this.bmwInfo.electricRange);
+          this.bmwInfo.fuelRange = toMi(this.bmwInfo.fuelRange);
       }
       this.error=null;
       this.updateDom(1000);
@@ -103,18 +104,20 @@ Module.register("MMM-BMWCarData", {
     }
 
     let info = this.bmwInfo;
+    var has = function (v) { return v !== null && v !== undefined && v !== ''; };
 
     var carContainer = document.createElement("div");
     carContainer.classList.add("bmw-container");
 
-    var imageContainer = document.createElement("span");
-    var imageObject = document.createElement("img");
-    imageObject.setAttribute('src', info.imageUrl);
-    imageObject.setAttribute('style', 'opacity: ' + this.config.vehicleOpacity + ';');
-    imageContainer.appendChild(imageObject);
-    carContainer.appendChild(imageContainer);
-    
-    wrapper.appendChild(carContainer);
+    if (info.imageUrl) {
+      var imageContainer = document.createElement("span");
+      var imageObject = document.createElement("img");
+      imageObject.setAttribute('src', info.imageUrl);
+      imageObject.setAttribute('style', 'opacity: ' + this.config.vehicleOpacity + ';');
+      imageContainer.appendChild(imageObject);
+      carContainer.appendChild(imageContainer);
+      wrapper.appendChild(carContainer);
+    }
 
     carContainer = document.createElement("div");
     carContainer.classList.add("bmw-container");
@@ -122,12 +125,14 @@ Module.register("MMM-BMWCarData", {
     var battery = document.createElement("span");
     battery.classList.add("battery");
     
-    if (this.config.showElectricPercentage  && (info.electricRange != '')) {
+    if (this.config.showElectricPercentage && has(info.chargingLevelHv)) {
       var plugged = document.createElement("span");
       plugged.classList.add("plugged");
 
-      if (info.connectorStatus) {
-        plugged.appendChild(this.faIconFactory("fa-bolt"));
+      if (info.charging) {
+        plugged.appendChild(this.faIconFactory("fa-bolt", "#5cbc82"));
+      } else if (info.connectorStatus) {
+        plugged.appendChild(this.faIconFactory("fa-plug"));
       } else {
         //plugged.appendChild(this.faIconFactory("fa-plug"));
         plugged.appendChild(document.createTextNode("\u00a0"));
@@ -161,7 +166,7 @@ Module.register("MMM-BMWCarData", {
 
     var mileage = document.createElement("span");
     mileage.classList.add("mileage");
-    if (this.config.showMileage) {
+    if (this.config.showMileage && has(info.mileage)) {
       mileage.appendChild(this.faIconFactory("fa-road"));
       mileage.appendChild(document.createTextNode(info.mileage + (this.config.useUSUnits ? ' mi' : ' km')));
     } else {
@@ -175,7 +180,7 @@ Module.register("MMM-BMWCarData", {
 
     var elecRange = document.createElement("span");
     elecRange.classList.add("elecRange");
-    if (this.config.showElectricRange && (info.electricRange != '')) {
+    if (this.config.showElectricRange && has(info.electricRange)) {
       elecRange.appendChild(this.faIconFactory("fa-charging-station"));
       elecRange.appendChild(document.createTextNode(info.electricRange + (this.config.useUSUnits ? ' mi' : ' km')));
     } else {
@@ -194,7 +199,9 @@ Module.register("MMM-BMWCarData", {
 
     var locked = document.createElement("span");
     locked.classList.add("locked");
-    if (info.doorLock) {
+    if (info.doorLockKnown === false) {
+      locked.appendChild(document.createTextNode(" "));
+    } else if (info.doorLock) {
       locked.appendChild(this.faIconFactory("fa-lock"));
     } else {
       locked.appendChild(this.faIconFactory("fa-lock-open"));
@@ -203,7 +210,7 @@ Module.register("MMM-BMWCarData", {
     
     var fuelRange = document.createElement("span");
     fuelRange.classList.add("fuelRange");
-    if ((this.config.showFuelRange) && (info.fuelRange != '')) {
+    if ((this.config.showFuelRange) && has(info.fuelRange)) {
       if(info.fuelRange<this.config.fuelRangeCritical)
         fuelRange.appendChild(this.faIconFactory("fa-gas-pump","red"));
       else

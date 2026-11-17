@@ -112,5 +112,6 @@ The module has a few configuration options:
 
 ## Changelog
 
+**2026-11-17** EV support (tested target: BMW iX3 Neue Klasse): battery SoC, charging/plug status and EV descriptors; per-login PKCE; null-safe parsing; compatibility with older MagicMirror (2.9.x / Node 10, falls back to node-fetch and console logging). For electric cars set <code>showFuelRange: false</code>.<br />
 **2024-12-24** Pushed first version which fully works for my car.<br />
 **2024-12-22** Forked from MMM-MyBMW and migrated to BMW CarData API.<br />
